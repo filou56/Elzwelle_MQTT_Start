@@ -142,9 +142,11 @@ class sheetapp_tk(tkinter.Tk):
             row = cell[0]
             col = cell[1]
             print(row,col,value)
-            time  = self.startSheet[row,0].data
-            stamp = self.startSheet[row,1].data
-            self.startSheet.after_idle(self.sendStartMsg,"{:} {:} {:}".format(time,stamp,value))
+            time   = self.startSheet[row,0].data
+            stamp  = self.startSheet[row,1].data
+            remark = str(self.startSheet[row,3].data).replace(' ','_')
+            if col == 2:
+                self.startSheet.after_idle(self.sendStartMsg,"{:} {:} {:} {:}".format(time,stamp,value,remark))
     
     def finishEndEditCell(self, event):
         print("Start EndEditCell: ")
@@ -153,9 +155,11 @@ class sheetapp_tk(tkinter.Tk):
             row = cell[0]
             col = cell[1]
             print(row,col,value)
-            time  = self.finishSheet[row,0].data
-            stamp = self.finishSheet[row,1].data
-            self.finishSheet.after_idle(self.sendFinishMsg,"{:} {:} {:}".format(time,stamp,value))
+            time   = self.finishSheet[row,0].data
+            stamp  = self.finishSheet[row,1].data
+            remark = str(self.finishSheet[row,3].data).replace(' ','_')
+            if col == 2:
+                self.finishSheet.after_idle(self.sendFinishMsg,"{:} {:} {:} {:}".format(time,stamp,value,remark))
                      
     def sendStartMsg(self,*args):
         if messagebox.askyesno("MODBUS", "Sende Startnummer zur Basis ?"):
