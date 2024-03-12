@@ -372,11 +372,10 @@ def on_message(client, userdata, msg):
             try:
                 data = payload.split(' ')
                 app.finishSheet.insert_row([ data[0].strip(),
-                                            data[1].strip(),
-                                            data[2].strip(),
+                                             data[1].strip(),
+                                             data[2].strip(),
                                                 '']) 
                 row = app.finishSheet.get_currently_selected().row 
-                app.finishSheet.set_cell_data(row,2,num)   
                 app.finishSheet.see(row)        
             except Exception as e:
                 print("MQTT Decode exception: ",e,msg.payload)
@@ -388,6 +387,7 @@ def on_message(client, userdata, msg):
                 stamp = data[1].strip()
                 num   = data[2].strip()
                 row = int(app.finishSheet.span("B").data.index(str(stamp)))
+                app.finishSheet.set_cell_data(row,2,num)
                 app.finishSheet[row].highlight(bg = "aquamarine")   
                 print("AKN: ",row,stamp,num)
                  
