@@ -63,6 +63,7 @@ class sheetapp_tk(tkinter.Tk):
         self.menuFile = tkinter.Menu(self.menuBar, tearoff=False)
         self.menuFile.add_command(command = self.saveSheet, label="Blatt speichern")
         self.menuFile.add_command(command = self.loadSheet, label="Blatt laden")
+        self.menuFile.add_command(command = self.clearSheet, label="Blatt löschen")
         
         self.menuBar.add_cascade(label="Datei",menu=self.menuFile)
         
@@ -104,7 +105,8 @@ class sheetapp_tk(tkinter.Tk):
         self.startSheet.span('B').readonly()
         
         self.startSheet.disable_bindings("All")
-        self.startSheet.enable_bindings("edit_cell","single_select","drag_select","row_select","copy")
+        self.startSheet.enable_bindings("edit_cell","single_select","right_click_popup_menu",
+                                        "drag_select","row_select","copy")
         self.startSheet.extra_bindings("end_edit_cell", func=self.startEndEditCell)
         
         #----- Start Page -------
@@ -129,7 +131,8 @@ class sheetapp_tk(tkinter.Tk):
         self.finishSheet.span('B').readonly()
         
         self.finishSheet.disable_bindings("All")
-        self.finishSheet.enable_bindings("edit_cell","single_select","drag_select","row_select","copy")
+        self.finishSheet.enable_bindings("edit_cell","single_select","right_click_popup_menu",
+                                         "drag_select","row_select","copy")
         self.finishSheet.extra_bindings("end_edit_cell", func=self.finishEndEditCell)
         
     def startEndEditCell(self, event):
@@ -155,13 +158,13 @@ class sheetapp_tk(tkinter.Tk):
             self.finishSheet.after_idle(self.sendFinishMsg,"{:} {:} {:}".format(time,stamp,value))
                      
     def sendStartMsg(self,*args):
-        if messagebox.askyesno("MODBUS", "Sende Startnummer zur Basis"):
+        if messagebox.askyesno("MODBUS", "Sende Startnummer zur Basis ?"):
             if len(args) == 1:
                 print("Send: ",args[0])
                 mqtt_client.publish("elzwelle/stopwatch/start/number", payload=args[0], qos=1)
                 
     def sendFinishMsg(self,*args):
-        if messagebox.askyesno("MODBUS", "Sende Startnummer zur Basis"):
+        if messagebox.askyesno("MODBUS", "Sende Startnummer zur Basis ?"):
             if len(args) == 1:
                 print("Send: ",args[0])
                 mqtt_client.publish("elzwelle/stopwatch/finish/number", payload=args[0], qos=1)
@@ -235,6 +238,18 @@ class sheetapp_tk(tkinter.Tk):
         except Exception as error:
             print(error)
             return
+        
+    def clearSheet(self):
+        tab = self.tabControl.index(self.tabControl.select())  
+        if messagebox.askyesno("Start/Ziel", "Alle Daten löschen ?"):
+            print("Clear sheet:",tab)
+            if tab == 0:
+                self.startSheet.deselect()
+                self.startSheet.data = []
+            elif tab == 1:
+                self.finishSheet.deselect()
+                self.finishSheet.data = []
+                
 #-------------------------------------------------------------------
 
 # setting callbacks for different events to see if it works, print the message etc.
@@ -328,7 +343,9 @@ def on_message(client, userdata, msg):
                 app.startSheet.insert_row([ data[0].strip(),
                                             data[1].strip(),
                                             data[2].strip(),
-                                                ''])         
+                                                ''])     
+                row = app.startSheet.get_currently_selected().row    
+                app.startSheet.see(row)
             except Exception as e:
                 print("MQTT Decode exception: ",e,msg.payload)
             
@@ -338,7 +355,8 @@ def on_message(client, userdata, msg):
                 data  = payload.split(' ')
                 stamp = data[1].strip()
                 num   = data[2].strip() 
-                row = int(app.startSheet.span("B").data.index(str(stamp)))
+                row   = int(app.startSheet.span("B").data.index(str(stamp)))
+                app.startSheet.set_cell_data(row,2,num)
                 app.startSheet[row].highlight(bg = "aquamarine")   
                 print("AKN: ",row,stamp,num)
                  
@@ -352,7 +370,10 @@ def on_message(client, userdata, msg):
                 app.finishSheet.insert_row([ data[0].strip(),
                                             data[1].strip(),
                                             data[2].strip(),
-                                                ''])         
+                                                '']) 
+                row = app.finishSheet.get_currently_selected().row 
+                app.finishSheet.set_cell_data(row,2,num)   
+                app.finishSheet.see(row)        
             except Exception as e:
                 print("MQTT Decode exception: ",e,msg.payload)
             
@@ -368,7 +389,7 @@ def on_message(client, userdata, msg):
                  
             except Exception as e:
                 print("MQTT Decode exception: ",e,msg.payload)
-    
+        
 #-------------------------------------------------------------------
 # Main program
 #-------------------------------------------------------------------
@@ -438,6 +459,16 @@ if __name__ == '__main__':
         app.tabControl.tab(1, state="hidden") 
     
     app.title("MQTT Start/Ziel Tabelle Elz-Zeit")
+    
+    app.startSheet.popup_menu_add_command(
+        "Clear sheet data",
+        app.clearSheet,
+    )
+    
+    app.finishSheet.popup_menu_add_command(
+        "Clear sheet data",
+        app.clearSheet,
+    )
     
     # run
     app.mainloop()
