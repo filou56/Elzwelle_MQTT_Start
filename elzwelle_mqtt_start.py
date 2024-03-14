@@ -436,6 +436,7 @@ if __name__ == '__main__':
     
         # enable TLS for secure connection
         if config.getboolean('mqtt','tls_enabled'):
+            #mqtt_client.tls_set(certfile="/etc/ssl/certs/isrgrootx1.pem",tls_version=mqtt.client.ssl.PROTOCOL_TLS)
             mqtt_client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
         # set username and password
         if config.getboolean('mqtt','auth_enabled'):
