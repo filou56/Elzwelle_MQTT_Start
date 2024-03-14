@@ -271,7 +271,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
     
     # subscribe to all topics of encyclopedia by using the wildcard "#"
     client.subscribe("elzwelle/stopwatch/#", qos=1)
-    
+        
     # a single publish, this can also be done in loops, etc.
     client.publish("elzwelle/monitor", payload="running", qos=1)
     
@@ -337,10 +337,7 @@ def on_message(client, userdata, msg):
         :param msg: the message with topic and payload
     """
     print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
-    
-    # drop qos 0 echo from bridge 
-    if msg.qos == 0: return
-    
+        
     payload = msg.payload.decode('ISO8859-1')        # ('utf-8')
                 
     if msg.topic == 'elzwelle/stopwatch/start':
