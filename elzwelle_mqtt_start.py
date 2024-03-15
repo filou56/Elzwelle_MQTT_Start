@@ -67,7 +67,7 @@ class sheetapp_tk(tkinter.Tk):
         
         self.menuBar.add_cascade(label="Datei",menu=self.menuFile)
         
-        self.pageHeader = tkinter.Label(self,text="Startnummer Eingabe",
+        self.pageHeader = tkinter.Label(self,text="START / ZIEL  Startnummer Eingabe",
                                         font=("Arial", 18),
                                         bg='#D3E3FD')
         self.pageHeader.pack(expand = 0, fill ="x") 
@@ -109,6 +109,8 @@ class sheetapp_tk(tkinter.Tk):
                                         "drag_select","row_select","copy")
         self.startSheet.extra_bindings("end_edit_cell", func=self.startEndEditCell)
         
+        self.startSheet.edit_validation(self.validateEdits)
+        
         #----- Start Page -------
                  
         self.finishTab.grid_columnconfigure(0, weight = 1)
@@ -134,6 +136,8 @@ class sheetapp_tk(tkinter.Tk):
         self.finishSheet.enable_bindings("edit_cell","single_select","right_click_popup_menu",
                                          "drag_select","row_select","copy")
         self.finishSheet.extra_bindings("end_edit_cell", func=self.finishEndEditCell)
+        
+        self.finishSheet.edit_validation(self.validateEdits)
         
     def startEndEditCell(self, event):
         print("Start EndEditCell: ")
@@ -179,7 +183,21 @@ class sheetapp_tk(tkinter.Tk):
             return self.startSheet
         elif tab == "Ziel":
             return self.finishSheet
-
+    
+    def validateEdits(self, event):
+        print("Validate: ")
+        for cell, value in event.cells.table.items():
+            row = cell[0]
+            col = cell[1]
+            print(row,col,value)
+            try:
+                num = int(value.replace(',','.'))
+                return "{:d}".format(num)
+            except Exception as error:
+                print(error)
+                messagebox.showerror(title="Fehler", message="Keine gültige Zahl !")
+        return
+    
     def saveSheet(self):
         saveSheet = self.getSelectedSheet()
         print("Save: "+saveSheet.name)
